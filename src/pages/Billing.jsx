@@ -33,9 +33,18 @@ const Billing = () => {
         customersAPI.getAll(),
         itemsAPI.getAll()
       ])
-      setCustomers(customersRes.data.filter(c => c.customerType === billingType))
-      setItems(itemsRes.data)
+      // Defensive: always use array
+      const customersArr = Array.isArray(customersRes.data)
+        ? customersRes.data
+        : (Array.isArray(customersRes) ? customersRes : [])
+      const itemsArr = Array.isArray(itemsRes.data)
+        ? itemsRes.data
+        : (Array.isArray(itemsRes) ? itemsRes : [])
+      setCustomers(customersArr.filter(c => c.customerType === billingType))
+      setItems(itemsArr)
     } catch (error) {
+      setCustomers([])
+      setItems([])
       toast.error('Failed to fetch data')
     }
   }
@@ -142,7 +151,7 @@ const Billing = () => {
         billingType
       }
 
-      const response = await billingAPI.create(invoiceData)
+      const response = await billingAPI.createInvoice(invoiceData)
       toast.success('Invoice generated successfully!')
       navigate('/invoice-success', {
         state: {
@@ -153,7 +162,14 @@ const Billing = () => {
         }
       })
     } catch (error) {
-      toast.error('Failed to generate invoice')
+      // Log error details for debugging
+      if (error.response) {
+        console.error('Invoice generation error:', error.response.data);
+        toast.error(`Failed to generate invoice: ${error.response.data.message || 'Server error'}`);
+      } else {
+        console.error('Invoice generation error:', error);
+        toast.error('Failed to generate invoice');
+      }
     } finally {
       setLoading(false)
     }

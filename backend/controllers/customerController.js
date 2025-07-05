@@ -1,6 +1,9 @@
-import Customer from '../models/Customer.js';
+// Controller for customer CRUD operations
+const Customer = require('../models/Customer.js');
+const Invoice = require('../models/Invoice.js');
 
-export const getCustomers = async (req, res) => {
+// Get all customers (optionally filtered by query)
+const getCustomers = async (req, res) => {
     try {
         const customers = await Customer.find(req.query);
         res.json(customers);
@@ -9,7 +12,8 @@ export const getCustomers = async (req, res) => {
     }
 };
 
-export const createCustomer = async (req, res) => {
+// Create a new customer
+const createCustomer = async (req, res) => {
     try {
         const customer = new Customer(req.body);
         await customer.save();
@@ -19,7 +23,8 @@ export const createCustomer = async (req, res) => {
     }
 };
 
-export const updateCustomer = async (req, res) => {
+// Update an existing customer by ID
+const updateCustomer = async (req, res) => {
     try {
         const customer = await Customer.findByIdAndUpdate(req.params.id, req.body, { new: true });
         res.json(customer);
@@ -28,11 +33,24 @@ export const updateCustomer = async (req, res) => {
     }
 };
 
-export const deleteCustomer = async (req, res) => {
+// Delete a customer by ID
+const deleteCustomer = async (req, res) => {
     try {
-        await Customer.findByIdAndDelete(req.params.id);
-        res.json({ message: 'Customer deleted' });
+        const customerId = req.params.id;
+        // First, delete all invoices associated with this customer
+        await Invoice.deleteMany({ customer: customerId });
+        // Then, delete the customer
+        await Customer.findByIdAndDelete(customerId);
+        res.json({ message: 'Customer and associated invoices deleted successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+        console.error("Error deleting customer and invoices:", error);
+        res.status(500).json({ message: 'Server error while deleting customer' });
     }
+};
+
+module.exports = {
+    getCustomers,
+    createCustomer,
+    updateCustomer,
+    deleteCustomer,
 };

@@ -1,6 +1,8 @@
-import Item from '../models/Item.js';
+// Controller for item CRUD operations
+const Item = require('../models/Item.js');
 
-export const getItems = async (req, res) => {
+// Get all items
+const getItems = async (req, res) => {
     try {
         const items = await Item.find();
         res.json(items);
@@ -9,7 +11,8 @@ export const getItems = async (req, res) => {
     }
 };
 
-export const createItem = async (req, res) => {
+// Create a new item
+const createItem = async (req, res) => {
     try {
         const item = new Item(req.body);
         await item.save();
@@ -19,7 +22,8 @@ export const createItem = async (req, res) => {
     }
 };
 
-export const updateItem = async (req, res) => {
+// Update an existing item by ID
+const updateItem = async (req, res) => {
     try {
         const item = await Item.findByIdAndUpdate(req.params.id, req.body, { new: true });
         res.json(item);
@@ -28,11 +32,19 @@ export const updateItem = async (req, res) => {
     }
 };
 
-export const deleteItem = async (req, res) => {
+// Delete an item by ID
+const deleteItem = async (req, res) => {
     try {
         await Item.findByIdAndDelete(req.params.id);
         res.json({ message: 'Item deleted' });
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
     }
+};
+
+module.exports = {
+    getItems,
+    createItem,
+    updateItem,
+    deleteItem,
 };

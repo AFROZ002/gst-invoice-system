@@ -37,9 +37,17 @@ const Customers = () => {
   const fetchCustomers = async () => {
     setLoading(true)
     try {
-      const response = await customersAPI.getAll()
-      setCustomers(response.data)
+      const response = await customersAPI.getAll(activeTab)
+      // Defensive: always set to array
+      if (Array.isArray(response.data)) {
+        setCustomers(response.data)
+      } else if (Array.isArray(response)) {
+        setCustomers(response)
+      } else {
+        setCustomers([])
+      }
     } catch (error) {
+      setCustomers([])
       toast.error('Failed to fetch customers')
     } finally {
       setLoading(false)
@@ -48,7 +56,7 @@ const Customers = () => {
 
   useEffect(() => {
     fetchCustomers()
-  }, [])
+  }, [activeTab])
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -86,13 +94,13 @@ const Customers = () => {
   }
 
   const handleDelete = async (customer) => {
-    if (window.confirm('Are you sure you want to delete this customer?')) {
+    if (window.confirm('Are you sure you want to delete this customer? This will also delete all of their invoices.')) {
       try {
         await customersAPI.delete(customer._id)
-        toast.success('Customer deleted successfully')
+        toast.success('Customer and all associated invoices deleted.')
         fetchCustomers()
       } catch (error) {
-        toast.error('Failed to delete customer')
+        toast.error('Failed to delete customer.')
       }
     }
   }
